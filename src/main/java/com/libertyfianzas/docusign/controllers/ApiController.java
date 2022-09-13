@@ -34,11 +34,7 @@ public class ApiController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, bindingResult.getFieldError().getDefaultMessage(), null);
 
         try {
-            String envelopeId = docuSignService.createEnvelope(envelopeRequest);
-
-            System.out.println(envelopeId);
-
-            return new ResponseEntity<String>("success", HttpStatus.OK);
+            return new ResponseEntity<String>(docuSignService.createEnvelope(envelopeRequest), HttpStatus.OK);
         } catch (Exception e) {
             System.out.println("ERROR: " + e.getMessage());
         }

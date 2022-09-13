@@ -1,6 +1,7 @@
 package com.libertyfianzas.docusign.services;
 
 import com.docusign.esign.api.EnvelopesApi;
+import com.docusign.esign.api.SignatureApi;
 import com.docusign.esign.client.ApiClient;
 import com.docusign.esign.client.ApiException;
 import com.docusign.esign.client.auth.OAuth;
@@ -20,7 +21,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.stream.IntStream;
 
 @Service
 public class DocuSignService {
@@ -101,7 +101,7 @@ public class DocuSignService {
             Signer signer = new Signer();
             signer.setEmail(signerRequest.email);
             signer.setName(signerRequest.fullName);
-            signer.recipientId(Integer.toString(i + 1));
+            signer.recipientId((i + 1) + "");
             signer.setTabs(tabs);
 
             signers.add(signer);
@@ -112,7 +112,38 @@ public class DocuSignService {
 
         envelope.setRecipients(recipients);
 
-        return envelopesApi.createEnvelope(accountId, envelope).getEnvelopeId();
+        EnvelopeSummary envelopeSummary = envelopesApi.createEnvelope(accountId, envelope);
+
+        String envelopeId = envelopeSummary.getEnvelopeId();
+        /*ReturnUrlRequest viewRequest = new ReturnUrlRequest();
+        viewRequest.setReturnUrl("http://localhost:8080");
+
+        ViewUrl viewUrl = envelopesApi.createSenderView(accountId, envelopeId, viewRequest);
+
+        return viewUrl.getUrl();*/
+
+        RecipientViewRequest viewRequest = new RecipientViewRequest();
+        viewRequest.setReturnUrl("http://localhost:8080/state=123");
+        viewRequest.setAuthenticationMethod("none");
+        //viewRequest.setEmail("Christian.Castellanos@LibertyFianzas.com");
+        //viewRequest.setUserName("Chris Cardona");
+        viewRequest.setEmail(signers.get(0).getEmail());
+        viewRequest.setUserName(signers.get(0).getName());
+        //viewRequest.setClientUserId("1000");
+        ViewUrl viewUrl = envelopesApi.createRecipientView(accountId, envelopeId, viewRequest);
+
+        /*String pingFrequency = "600";
+        viewRequest.setPingFrequency(pingFrequency); // seconds
+        viewRequest.setPingUrl(config.getDsPingUrl());*/
+
+        /*ConsoleViewRequest viewRequest = new ConsoleViewRequest();
+        viewRequest.setReturnUrl("http://localhost:8080/state=123");
+
+        viewRequest.setEnvelopeId(envelopeId);
+
+        ViewUrl viewUrl = envelopesApi.createConsoleView(accountId, viewRequest);*/
+
+        return viewUrl.getUrl();
     }
 
     public void webhookEventHandle(WebhookEventRequest webhookEventRequest) {
